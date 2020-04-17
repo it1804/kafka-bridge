@@ -11,7 +11,7 @@ func main() {
 
     c := make(chan []byte)
 
-    kafka := utils.NewKafkaWriter([]string{"localhost:9092"},"test",1500,400,3,1,true)
+    kafka := utils.NewKafkaWriter("localhost:9092","test")
     kafka.MessageHandler(c)
 
     server := utils.NewListenServer("udp",":12345")

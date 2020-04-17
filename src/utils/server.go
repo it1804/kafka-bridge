@@ -16,7 +16,6 @@ type (
 
 const maxBufferSize = 65535
 
-
 func NewListenServer(proto string,address string) *ListenServer {
     return &ListenServer{proto: proto, address: address}
 }

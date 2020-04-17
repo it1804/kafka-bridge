@@ -1,65 +1,57 @@
 package utils
 
 import (
-    "time"
     "fmt"
     "os"
-    "log"
-    "context"
-    "github.com/segmentio/kafka-go"
-    "github.com/segmentio/kafka-go/snappy"
+    "encoding/json"
+    "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 type (
     KafkaWriter struct {
-	Brokers []string
-	Topic string
-	QueueCapacity int
-	BatchSize int
-	MaxAttempts int
-	RequiredAcks int
-	Async bool
+	brokers string
+	topic string
     }
 )
 
-
-func NewKafkaWriter(Brokers []string, Topic string, QueueCapacity int, BatchSize int, MaxAttempts int, RequiredAcks int, Async bool) *KafkaWriter {
-    return &KafkaWriter{Brokers: Brokers, Topic: Topic, QueueCapacity: QueueCapacity,BatchSize: BatchSize, MaxAttempts: MaxAttempts, RequiredAcks: RequiredAcks, Async: Async}
+func NewKafkaWriter(brokers string, topic string) *KafkaWriter {
+    return &KafkaWriter{brokers: brokers, topic: topic}
 }
 
 func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
-    w := kafka.NewWriter(kafka.WriterConfig{
-			Brokers: r.Brokers,
-		        Topic:   r.Topic,
-			QueueCapacity: r.QueueCapacity,
-		    	BatchSize: r.BatchSize,
-			MaxAttempts: r.MaxAttempts,
-			RequiredAcks: r.RequiredAcks,
-			Async: r.Async,
-		        Balancer: &kafka.LeastBytes{},
-			Logger: log.New(os.Stdout, "Kafka: ", 0),
-			CompressionCodec: snappy.NewCompressionCodec(),
-		    })
-
-    defer w.Close()
-
     go func() {
-	t := time.NewTicker(time.Duration(30)*time.Second)
-	l := log.New(os.Stdout, "Kafka: " + " stats ", 0)
-
-	for{
-	    <- t.C
-	    l.Println(fmt.Sprintf("%+v\n",w.Stats()))
+        p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": r.brokers,"statistics.interval.ms": 5000})
+	if err != nil {
+    	    panic(err)
 	}
-    }() 
+	defer p.Close()
 
-    go func() {
-	for {
+	go func() {
+    	    for e := range p.Events() {
+		switch ev := e.(type) {
+		    case kafka.Error:
+			fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
+		    case *kafka.Stats:
+			var stats map[string]interface{}
+			json.Unmarshal([]byte(e.String()), &stats)
+			fmt.Printf("Stats: %v messages (%v bytes) messages consumed\n",
+				stats["rxmsgs"], stats["rxmsg_bytes"])
+		    case *kafka.Message:
+			if ev.TopicPartition.Error != nil {
+			    fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
+			} 
+		    default:
+			fmt.Printf("Ignored %v\n", e)
+		    }
+		}
+	}()
+
+        for {
 	    msg := <- input
-	    fmt.Println(msg)
-	    w.WriteMessages(context.Background(), kafka.Message{Value:msg})
-	}
+//          fmt.Println(msg)
+	    p.Produce(&kafka.Message { TopicPartition: kafka.TopicPartition{Topic: &r.topic, Partition: kafka.PartitionAny}, Value: msg, }, nil)
+        }
+	p.Flush(15 * 1000)
     }()
-
     return;
 }
