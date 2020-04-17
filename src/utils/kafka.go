@@ -34,8 +34,8 @@ func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
 		    case *kafka.Stats:
 			var stats map[string]interface{}
 			json.Unmarshal([]byte(e.String()), &stats)
-			fmt.Printf("Stats: %v messages (%v bytes) messages consumed\n",
-				stats["rxmsgs"], stats["rxmsg_bytes"])
+			fmt.Printf("Stats: %v messages (%v bytes) messages written\n",
+				stats["txmsgs"], stats["txmsg_bytes"])
 		    case *kafka.Message:
 			if ev.TopicPartition.Error != nil {
 			    fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
@@ -48,7 +48,6 @@ func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
 
         for {
 	    msg := <- input
-//          fmt.Println(msg)
 	    p.Produce(&kafka.Message { TopicPartition: kafka.TopicPartition{Topic: &r.topic, Partition: kafka.PartitionAny}, Value: msg, }, nil)
         }
 	p.Flush(15 * 1000)
