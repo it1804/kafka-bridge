@@ -19,8 +19,19 @@ func NewKafkaWriter(brokers string, topic string) *KafkaWriter {
 }
 
 func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
-    go func() {
-        p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": r.brokers,"statistics.interval.ms": 5000})
+    go func() {  
+        p, err := kafka.NewProducer(&kafka.ConfigMap {
+					    "bootstrap.servers": r.brokers,
+					    "statistics.interval.ms": 5000,
+					    "compression.codec": "snappy",
+					    "socket.keepalive.enable": true,
+					    "socket.timeout.ms": 1000,
+					    "enable.idempotence": true,
+					    "max.in.flight.requests.per.connection": 1,
+//					    "debug": "all",
+					    "acks": "all",
+					    "retries": "100000",
+					})
 	if err != nil {
     	    panic(err)
 	}
@@ -45,12 +56,17 @@ func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
 		    }
 		}
 	}()
-
         for {
 	    msg := <- input
-	    p.Produce(&kafka.Message { TopicPartition: kafka.TopicPartition{Topic: &r.topic, Partition: kafka.PartitionAny}, Value: msg, }, nil)
+	    err = p.Produce(&kafka.Message { TopicPartition: kafka.TopicPartition{Topic: &r.topic, Partition: kafka.PartitionAny}, Value: msg, }, nil)
+            if err != nil {
+                fmt.Printf("Failed to produce message: %v\n", err)
+            }
+
+	    fmt.Printf("print: %s\n",msg)
         }
 	p.Flush(15 * 1000)
+
     }()
     return;
 }
