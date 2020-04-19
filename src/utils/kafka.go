@@ -2,8 +2,9 @@ package utils
 
 import (
     "fmt"
+    "sync"
     "os"
-//    "strconv"
+    "runtime"
     "encoding/json"
     "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
@@ -15,11 +16,26 @@ type (
     }
 )
 
+
 func NewKafkaWriter(brokers string, topic string) *KafkaWriter {
     return &KafkaWriter{brokers: brokers, topic: topic}
 }
 
+
 func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
+
+    go func() {  
+	wg := new(sync.WaitGroup)
+	 for i := 0; i < runtime.NumCPU(); i++ {
+    	    wg.Add(1)
+    	    worker(input, wg, r)
+	}
+	wg.Wait()
+    }()
+    return
+}
+
+func worker(input chan []byte, wg *sync.WaitGroup, r *KafkaWriter) {
     go func() {  
         p, err := kafka.NewProducer(&kafka.ConfigMap {
 					    "bootstrap.servers": r.brokers,
@@ -28,12 +44,10 @@ func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
 					    "socket.keepalive.enable": true,
 					    "socket.timeout.ms": 1000,
 					    "enable.idempotence": true,
-//					    "max.in.flight.requests.per.connection": 1,
 //					    "debug": "all",
-//					    "acks": "all",
 					    "retries": "100000",
-					    "queue.buffering.max.kbytes": 2147483647,
-					    "queue.buffering.max.messages":10000000,
+					    "batch.num.messages": 100000,
+					    "queue.buffering.max.messages":1000000,
 					})
 	if err != nil {
     	    panic(err)
@@ -48,8 +62,8 @@ func (r *KafkaWriter) MessageHandler(input chan []byte) (err error) {
 		    case *kafka.Stats:
 			var stats map[string]interface{}
 			json.Unmarshal([]byte(e.String()), &stats)
-			fmt.Printf("Stats: %v messages (%v bytes) messages written\n",
-				stats["txmsgs"], stats["txmsg_bytes"])
+			fmt.Printf("Stats %d: %v messages (%v bytes) messages written\n",
+				 getGID(),stats["txmsgs"], stats["txmsg_bytes"])
 		    case *kafka.Message:
 			if ev.TopicPartition.Error != nil {
 			    fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
