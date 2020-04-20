@@ -1,0 +1,12 @@
+{
+    "Kafka": {
+	"Brokers": "localhost:9092",
+	"Topic": "test",
+	"Workers": 4,
+	"MaxPacketSize": 65535
+    },
+    "Listen": {
+	"Address": "0.0.0.0:12345",
+	"Workers": 4
+    }
+}

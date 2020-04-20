@@ -1,68 +1,107 @@
 package utils
 
 import (
-    "fmt"
+    "log"
     "net"
     "os"
     "context"
-    "runtime"
+    "syscall"
+    "os/signal"
+    "sync/atomic"
+    "time"
 )
+
+var ops uint64 = 0
+var total uint64 = 0
+var flushTicker *time.Ticker
 
 type (
     ListenServer struct {
 	proto string
 	address string
+	workers int
+	packetSize int
     }
 )
 
 const ( 
-    UDPPacketSize = 1500
-    packetBufSize = 1024 * 1024 // 1 MB
+    flushInterval = time.Duration(30) * time.Second
 )
 
 
-func NewListenServer(proto string, address string) *ListenServer {
-    return &ListenServer{proto: proto, address: address}
+func NewListenServer(proto string, address string, packetSize int, workers int) *ListenServer {
+    return &ListenServer {
+	    proto: proto, 
+	    address: address,
+	    workers: workers,
+	    packetSize: packetSize,
+    }
 }
 
-func (r *ListenServer) Run(ctx context.Context,output chan []byte) (err error) {
+func (r *ListenServer) Listen(output chan []byte) (err error) {
 
-    c, err := net.ListenPacket(r.proto, r.address)
-    if err != nil {
-	return
+    ctx := context.Background()
+    lc := net.ListenConfig {
+        Control: func(network, address string, c syscall.RawConn) error {
+            var opErr error
+            err := c.Control(func(fd uintptr) {
+//                opErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_RCVBUF, 65536)
+                opErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+            })
+            if err != nil {
+                return err
+            }
+            return opErr
+        }, 
     }
-    doneChan := make(chan error, 1)
-    for i := 0; i < runtime.NumCPU(); i++ {
+
+    lp, err := lc.ListenPacket(ctx, "udp", r.address)
+    if err != nil {
+        log.Printf("UDP listen error: %s\n", err)
+	os.Exit(0)
+    } else {
+        log.Printf("UDP new listener on %s\n",r.address)
+    }
+    conn := lp.(*net.UDPConn)
+
+    for i := 0; i < r.workers; i++ {
 	go func() {
-    	    receive(c,output)
+    	    receive(conn,output,r)
 	}()
     }
 
-    select {
-	case <-ctx.Done():
-	    fmt.Println("cancelled")
-	    err = ctx.Err()
-	case err = <-doneChan:
-    }
+
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+	for range c {
+	    atomic.AddUint64(&total, ops)
+	    log.Printf("UDP total packets received: %d\n", total)
+	    os.Exit(0)
+	}
+    }()
     return
 }
 
-func receive(c net.PacketConn, output chan []byte) {
+func (r *ListenServer) PrintStat() () {
+    flushTicker = time.NewTicker(flushInterval)
+    for range flushTicker.C {
+	atomic.AddUint64(&total, ops)
+	log.Printf("UDP received packets: %d (pps: %f)\n",total, float64(ops)/flushInterval.Seconds())
+	atomic.StoreUint64(&ops, 0)
+    }
+}
+
+func receive(c net.PacketConn, output chan []byte,r *ListenServer) {
     defer c.Close()
-    var buf []byte
-//    var gid = getGID()
+    msg := make([]byte, r.packetSize)
     for {
-	if len(buf) < UDPPacketSize {
-	    buf = make([]byte, packetBufSize, packetBufSize)
-	}
-	nbytes, _, err := c.ReadFrom(buf)
-//	 fmt.Fprintf(os.Stderr, "Read: %d bytes thread %d\n", gid, nbytes)
-	if err != nil {
-	    fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-	    continue
-	}
-	msg := buf[:nbytes]
-	buf = buf[nbytes:]
-	output <- msg
+        nbytes, _, err := c.ReadFrom(msg[0:])
+        if err != nil {
+            log.Printf("UDP receive error %s\n", err)
+            continue
+        }
+	output <- msg[:nbytes]
+	atomic.AddUint64(&ops, 1)
     }
 }
