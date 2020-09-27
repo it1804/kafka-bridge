@@ -1,0 +1,36 @@
+{
+   "services":[
+      {
+         "type":"kafka_consumer",
+         "name":"kafka2kafka",
+         "kafka_consumer_options":{
+            "brokers":"metrics01.example.org:9092",
+            "topic":"metrics",
+            "group":"metrics-reader",
+            "options":[
+               "auto.offset.reset=earliest",
+               "enable.auto.commit=true",
+               "session.timeout.ms=6000"
+            ]
+         },
+         "kafka_producer":{
+            "brokers":"10.0.0.1:9092, 10.0.0.2:9092, 10.0.0.3:9092",
+            "set_headers":{
+               "from-server":"metrics01",
+               "tag":"demo"
+            },
+            "topic":"metrics",
+            "options":[
+               "compression.codec=snappy",
+               "socket.keepalive.enable=true",
+               "queued.max.messages.kbytes=1048576",
+               "retries=100000"
+            ],
+            "queue_buffer_len":1000
+         }
+      }
+   ],
+   "stat":{
+      "listen":"0.0.0.0:5000"
+   }
+}

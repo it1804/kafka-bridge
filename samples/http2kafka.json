@@ -1,0 +1,54 @@
+{
+   "services":[
+      {
+         "type":"http",
+         "name":"http-stream-json",
+         "http_options":{
+            "listen":"127.0.0.1:8081",
+            "base64_encode_body":false,
+            "use_json":true,
+            "allowed_headers":[
+               "x-auth-token",
+               "x-real-ip",
+               "x-event-time"
+            ]
+         },
+         "kafka_producer":{
+            "brokers":"10.0.0.1:9092, 10.0.0.2:9092, 10.0.0.3:9092",
+            "topic":"logs",
+            "options":[
+               "compression.codec=snappy",
+               "socket.keepalive.enable=true",
+               "queued.max.messages.kbytes=1048576",
+               "retries=100000",
+               "message.max.bytes=2000000"
+            ],
+            "queue_buffer_len":1000
+         }
+      },
+      {
+         "type":"http",
+         "name":"http-stream-base64",
+         "http_options":{
+            "listen":"127.0.0.1:8082",
+            "use_json":false,
+            "base64_encode_body":true
+         },
+         "kafka_producer":{
+            "brokers":"10.0.0.1:9092, 10.0.0.2:9092, 10.0.0.3:9092",
+            "topic":"diagnostic",
+            "options":[
+               "compression.codec=snappy",
+               "socket.keepalive.enable=true",
+               "queued.max.messages.kbytes=1048576",
+               "retries=100000",
+               "message.max.bytes=2000000"
+            ],
+            "queue_buffer_len":1000
+         }
+      }
+   ],
+   "stat":{
+      "listen":"0.0.0.0:8090"
+   }
+}

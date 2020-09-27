@@ -1,0 +1,20 @@
+{
+   "services": [
+       {
+           "name": "http2kafka",
+           "url": "http://127.0.0.1:8090"
+       },
+       {
+           "name": "udp2kafka",
+           "url": "http://127.0.0.1:3000"
+       },
+       {
+           "name": "kafka2kafka",
+           "url": "http://127.0.0.1:5000"
+       }
+    ],
+    "metrics": {
+        "listen": "0.0.0.0:2112",
+    	"path": "/metrics"
+    }
+}

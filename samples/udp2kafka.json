@@ -1,0 +1,33 @@
+{
+   "services":[
+      {
+         "type":"udp",
+         "name":"udp-flow-json-strings",
+         "udp_options":{
+            "listen":"0.0.0.0:3000",
+            "max_packet_size":65535,
+            "signature_bytes":{
+               "0":"0x7b",
+               "1":"0x22"
+            },
+            "workers":2,
+            "base64_encode_body":false
+         },
+         "kafka_producer":{
+            "brokers":"10.0.0.1:9092, 10.0.0.2:9092, 10.0.0.3:9092",
+            "topic":"flow-test",
+            "options":[
+               "compression.codec=snappy",
+               "socket.keepalive.enable=true",
+               "queued.max.messages.kbytes=1048576",
+               "retries=100000",
+               "message.max.bytes=2000000"
+            ],
+            "queue_buffer_len":1000
+         }
+      }
+   ],
+   "stat":{
+      "listen":"0.0.0.0:3000"
+   }
+}
