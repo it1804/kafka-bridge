@@ -96,3 +96,11 @@ func ValidateUdpServerConfig(conf *UdpServiceConf, serviceName string) {
 		conf.MaxPacketSize = 65535
 	}
 }
+
+func ValidateHttpServerConfig(conf *HttpServiceConf, serviceName string) {
+	if len(conf.Path) == 0 {
+		log.Printf("[%s] http path value not defined, set to default (\"/\")", serviceName)
+        conf.Path="/"
+	}
+}
+

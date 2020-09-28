@@ -27,6 +27,7 @@ type httpService struct {
 
 func NewHttpService(ctx context.Context, wg *sync.WaitGroup, conf *config.Service) *httpService {
 
+    config.ValidateHttpServerConfig(&conf.HttpService, conf.Name)
 	config.ValidateKafkaProducerConfig(&conf.KafkaProducer, conf.Name)
 
 	s := &httpService{
