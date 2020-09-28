@@ -8,8 +8,8 @@ import (
 	"github.com/it1804/kafka-bridge/common/input"
 	"github.com/it1804/kafka-bridge/common/stat"
 	"github.com/it1804/kafka-bridge/config"
-	"github.com/valyala/fasthttp"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -28,6 +28,7 @@ func NewStatService(ctx context.Context, wg *sync.WaitGroup, conf *config.StatSe
 		wg:   wg,
 		input: input.NewHttpServer("stat", &input.HttpServerConf{
 			Listen: conf.Listen,
+			Path:   "/",
 		}),
 	}
 	go s.run()
@@ -58,13 +59,23 @@ func (s *statService) run() (err error) {
 	return nil
 }
 
-func (s *statService) handle(ctx *fasthttp.RequestCtx) (err error) {
-	var stat stat.ServiceStatList
-	ctx.SetContentType("text/plain; charset=utf8")
-	for w := range s.watch {
-		stat.Services = append(stat.Services, *s.watch[w].GetStat())
+func (s *statService) handle(w http.ResponseWriter, r *http.Request) (err error) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "405 method not allowed\n")
+		return nil
 	}
-	b, _ := json.MarshalIndent(stat, "", "  ")
-	fmt.Fprintf(ctx, string(b))
+	switch r.URL.Path {
+	case s.conf.JsonPath:
+		var stat stat.ServiceStatList
+		for service := range s.watch {
+			stat.Services = append(stat.Services, *s.watch[service].GetStat())
+		}
+		b, _ := json.MarshalIndent(stat, "", "  ")
+		fmt.Fprintf(w, string(b))
+	default:
+		http.NotFound(w, r)
+	}
 	return nil
+
 }

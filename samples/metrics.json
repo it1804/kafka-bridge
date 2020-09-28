@@ -2,15 +2,15 @@
    "services": [
        {
            "name": "http2kafka",
-           "url": "http://127.0.0.1:8090"
+           "url": "http://127.0.0.1:8090/stat"
        },
        {
            "name": "udp2kafka",
-           "url": "http://127.0.0.1:3000"
+           "url": "http://127.0.0.1:3000/stat"
        },
        {
            "name": "kafka2kafka",
-           "url": "http://127.0.0.1:5000"
+           "url": "http://127.0.0.1:5000/stat"
        }
     ],
     "metrics": {

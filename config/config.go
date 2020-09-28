@@ -23,6 +23,7 @@ type (
 
 	HttpServiceConf struct {
 		Listen         string   `json:"listen"`
+		Path           string   `json:"path"`
 		Base64Body     bool     `json:"base64_encode_body"`
 		UseJSON        bool     `json:"use_json,omitempty"`
 		AllowedHeaders []string `json:"allowed_headers,omitempty"`
@@ -48,7 +49,8 @@ type (
 	}
 
 	StatService struct {
-		Listen string `json:"listen"`
+		Listen   string `json:"listen,omitempty"`
+		JsonPath string `json:"json_path,omitempty"`
 	}
 
 	ServiceList struct {

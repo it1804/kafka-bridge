@@ -3,8 +3,8 @@ package input
 import (
 	"context"
 	"github.com/it1804/kafka-bridge/common/handlers"
-	"github.com/valyala/fasthttp"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -12,6 +12,7 @@ import (
 type (
 	HttpServerConf struct {
 		Listen string
+		Path   string
 	}
 
 	HttpServer struct {
@@ -37,22 +38,28 @@ func (r *HttpServer) Run(ctx context.Context, phandler handlers.HttpPacketHandle
 	r.wg.Add(1)
 	defer r.wg.Done()
 
-	requestHandler := &httpRequestHandler{
+	handler := &httpRequestHandler{
 		phandler: phandler,
 	}
 
-	server := &fasthttp.Server{
-		Handler:          requestHandler.handleRequest,
-		ReadTimeout:      300 * time.Second,
-		WriteTimeout:     300 * time.Second,
-		DisableKeepalive: false,
-		IdleTimeout:      5 * time.Second,
+	mux := http.NewServeMux()
+	mux.Handle(r.conf.Path, http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			handler.handleRequest(w, r)
+		},
+	))
+
+	server := &http.Server{
+		Addr:         r.conf.Listen,
+		Handler:      mux,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
+
 	errs := make(chan error, 1)
 
 	go func() {
-		err := server.ListenAndServe(r.conf.Listen)
-		if err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errs <- err
 			return
 		}
@@ -63,10 +70,7 @@ func (r *HttpServer) Run(ctx context.Context, phandler handlers.HttpPacketHandle
 		close(errs)
 		return err
 	case <-ctx.Done():
-		if err := server.Shutdown(); err != nil {
-			log.Printf("[%s] HTTP error with graceful close: %s", r.serviceName, err)
-			return err
-		}
+		server.Shutdown(ctx)
 		return nil
 	}
 	return nil
@@ -78,7 +82,8 @@ func (r *HttpServer) Shutdown() {
 	return
 }
 
-func (h *httpRequestHandler) handleRequest(ctx *fasthttp.RequestCtx) {
-	h.phandler.Handle(ctx)
+func (h *httpRequestHandler) handleRequest(w http.ResponseWriter, r *http.Request) {
+	h.phandler.Handle(w, r)
+
 	return
 }

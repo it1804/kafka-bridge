@@ -1,21 +1,21 @@
 package handlers
 
-import "github.com/valyala/fasthttp"
+import "net/http"
 
 type (
 	HttpPacketHandler interface {
-		Handle(ctx *fasthttp.RequestCtx) error
+		Handle(w http.ResponseWriter, r *http.Request) error
 	}
 
-	pHttpPacketHandler func(ctx *fasthttp.RequestCtx) error
+	pHttpPacketHandler func(w http.ResponseWriter, r *http.Request) error
 
 	httpPacketHandler struct {
 		handler pHttpPacketHandler
 	}
 )
 
-func (ph *httpPacketHandler) Handle(ctx *fasthttp.RequestCtx) error {
-	return ph.handler(ctx)
+func (ph *httpPacketHandler) Handle(w http.ResponseWriter, r *http.Request) error {
+	return ph.handler(w, r)
 }
 
 func NewHttpPacketHandler(handler pHttpPacketHandler) (*httpPacketHandler, error) {

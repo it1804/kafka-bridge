@@ -6,6 +6,7 @@
          "http_options":{
             "listen":"127.0.0.1:8081",
             "base64_encode_body":false,
+            "path":"/"
             "use_json":true,
             "allowed_headers":[
                "x-auth-token",
@@ -49,6 +50,7 @@
       }
    ],
    "stat":{
-      "listen":"0.0.0.0:8090"
+      "listen":"0.0.0.0:8090",
+      "json_path":"/stat"
    }
 }
