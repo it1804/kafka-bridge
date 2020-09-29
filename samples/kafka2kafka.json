@@ -32,6 +32,7 @@
    ],
    "stat":{
       "listen":"0.0.0.0:5000",
-      "json_path":"/stat"
+      "json_path":"/stat",
+      "metrics_path":"/metrics"
    }
 }

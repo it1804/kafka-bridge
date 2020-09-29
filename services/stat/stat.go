@@ -1,41 +1,45 @@
-package services
+package stat
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/it1804/kafka-bridge/common/config"
 	"github.com/it1804/kafka-bridge/common/handlers"
-	"github.com/it1804/kafka-bridge/common/input"
 	"github.com/it1804/kafka-bridge/common/stat"
-	"github.com/it1804/kafka-bridge/config"
+	"github.com/it1804/kafka-bridge/services"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
 	"sync"
 )
 
 type statService struct {
-	conf  *config.StatService
+	conf  *config.StatServiceConf
 	ctx   context.Context
 	wg    *sync.WaitGroup
-	input *input.HttpServer
-	watch []Service
+	input *stat.HttpServer
+	watch []services.Service
 }
 
-func NewStatService(ctx context.Context, wg *sync.WaitGroup, conf *config.StatService) *statService {
+func NewStatService(ctx context.Context, wg *sync.WaitGroup, conf *config.StatServiceConf) *statService {
+
+	config.ValidateStatServerConfig(conf, "stat")
+
 	s := &statService{
 		conf: conf,
 		ctx:  ctx,
 		wg:   wg,
-		input: input.NewHttpServer("stat", &input.HttpServerConf{
+		input: stat.NewHttpServer("stat", &stat.HttpServerConf{
 			Listen: conf.Listen,
-			Path:   "/",
 		}),
 	}
 	go s.run()
 	return s
 }
 
-func (s *statService) Watch(service Service) {
+func (s *statService) Watch(service services.Service) {
 	s.watch = append(s.watch, service)
 	return
 }
@@ -43,6 +47,9 @@ func (s *statService) Watch(service Service) {
 func (s *statService) run() (err error) {
 	s.wg.Add(1)
 	defer s.wg.Done()
+
+	collector := NewCollector(&s.watch)
+	prometheus.MustRegister(collector)
 
 	go func() {
 		handler, _ := handlers.NewHttpPacketHandler(s.handle)
@@ -73,6 +80,8 @@ func (s *statService) handle(w http.ResponseWriter, r *http.Request) (err error)
 		}
 		b, _ := json.MarshalIndent(stat, "", "  ")
 		fmt.Fprintf(w, string(b))
+	case s.conf.MetricsPath:
+		promhttp.Handler().ServeHTTP(w, r)
 	default:
 		http.NotFound(w, r)
 	}

@@ -3,11 +3,11 @@ package kafka
 import (
 	"context"
 	"encoding/base64"
+	"github.com/it1804/kafka-bridge/common/config"
 	"github.com/it1804/kafka-bridge/common/handlers"
 	"github.com/it1804/kafka-bridge/common/input"
 	"github.com/it1804/kafka-bridge/common/output"
 	"github.com/it1804/kafka-bridge/common/stat"
-	"github.com/it1804/kafka-bridge/config"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"log"
 	"sync"
@@ -15,7 +15,7 @@ import (
 
 type (
 	kafkaService struct {
-		conf   *config.Service
+		conf   *config.ServiceConf
 		input  *input.KafkaReader
 		output *output.KafkaWriter
 		wg     *sync.WaitGroup
@@ -23,7 +23,7 @@ type (
 	}
 )
 
-func NewKafkaService(ctx context.Context, wg *sync.WaitGroup, conf *config.Service) *kafkaService {
+func NewKafkaService(ctx context.Context, wg *sync.WaitGroup, conf *config.ServiceConf) *kafkaService {
 
 	config.ValidateKafkaConsumerServiceConfig(&conf.KafkaConsumerService, conf.Name)
 	config.ValidateKafkaProducerConfig(&conf.KafkaProducer, conf.Name)

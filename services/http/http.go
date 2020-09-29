@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/it1804/kafka-bridge/common/config"
 	"github.com/it1804/kafka-bridge/common/handlers"
 	"github.com/it1804/kafka-bridge/common/input"
 	"github.com/it1804/kafka-bridge/common/output"
 	"github.com/it1804/kafka-bridge/common/stat"
-	"github.com/it1804/kafka-bridge/config"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"io/ioutil"
 	"log"
@@ -18,16 +18,16 @@ import (
 )
 
 type httpService struct {
-	conf   *config.Service
+	conf   *config.ServiceConf
 	output *output.KafkaWriter
 	input  *input.HttpServer
 	ctx    context.Context
 	wg     *sync.WaitGroup
 }
 
-func NewHttpService(ctx context.Context, wg *sync.WaitGroup, conf *config.Service) *httpService {
+func NewHttpService(ctx context.Context, wg *sync.WaitGroup, conf *config.ServiceConf) *httpService {
 
-    config.ValidateHttpServerConfig(&conf.HttpService, conf.Name)
+	config.ValidateHttpServerConfig(&conf.HttpService, conf.Name)
 	config.ValidateKafkaProducerConfig(&conf.KafkaProducer, conf.Name)
 
 	s := &httpService{
@@ -36,7 +36,6 @@ func NewHttpService(ctx context.Context, wg *sync.WaitGroup, conf *config.Servic
 		wg:   wg,
 		input: input.NewHttpServer(conf.Name, &input.HttpServerConf{
 			Listen: conf.HttpService.Listen,
-			Path:   "/",
 		}),
 		output: output.NewKafkaWriter(ctx, conf.Name, &output.KafkaWriterConf{
 			Brokers:        conf.KafkaProducer.Brokers,

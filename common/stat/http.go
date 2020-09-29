@@ -1,4 +1,4 @@
-package input
+package stat
 
 import (
 	"context"

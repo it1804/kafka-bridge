@@ -3,11 +3,11 @@ package udp
 import (
 	"context"
 	"encoding/base64"
+	"github.com/it1804/kafka-bridge/common/config"
 	"github.com/it1804/kafka-bridge/common/handlers"
 	"github.com/it1804/kafka-bridge/common/input"
 	"github.com/it1804/kafka-bridge/common/output"
 	"github.com/it1804/kafka-bridge/common/stat"
-	"github.com/it1804/kafka-bridge/config"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"log"
 	"strconv"
@@ -16,7 +16,7 @@ import (
 
 type (
 	udpService struct {
-		conf   *config.Service
+		conf   *config.ServiceConf
 		ctx    context.Context
 		wg     *sync.WaitGroup
 		output *output.KafkaWriter
@@ -24,7 +24,7 @@ type (
 	}
 )
 
-func NewUdpService(ctx context.Context, wg *sync.WaitGroup, conf *config.Service) *udpService {
+func NewUdpService(ctx context.Context, wg *sync.WaitGroup, conf *config.ServiceConf) *udpService {
 
 	config.ValidateUdpServerConfig(&conf.UdpService, conf.Name)
 

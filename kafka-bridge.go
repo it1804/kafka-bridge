@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"github.com/it1804/kafka-bridge/config"
+	"github.com/it1804/kafka-bridge/common/config"
 	"github.com/it1804/kafka-bridge/services"
 	"github.com/it1804/kafka-bridge/services/http"
 	"github.com/it1804/kafka-bridge/services/kafka"
+	"github.com/it1804/kafka-bridge/services/stat"
 	"github.com/it1804/kafka-bridge/services/udp"
 	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
@@ -38,9 +39,6 @@ func main() {
 
 	decoder.Decode(data)
 
-	//	b, _ := json.MarshalIndent(conf, "", "  ")
-	//	log.Printf("Running config: %s\n", string(b))
-
 	ctxWithCancel, cancel := context.WithCancel(context.Background())
 
 	sig := make(chan os.Signal)
@@ -52,7 +50,7 @@ func main() {
 	var statService services.StatService
 
 	if len(conf.Stat.Listen) > 0 {
-		statService = services.NewStatService(ctxWithCancel, wg, &conf.Stat)
+		statService = stat.NewStatService(ctxWithCancel, wg, &conf.Stat)
 	}
 
 	for i := range conf.Services {
