@@ -73,13 +73,17 @@ func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, pac
 	defer c.Close()
 	for h.stop == false {
 		msg := make([]byte, packetSize)
-		nbytes, _, err := c.ReadFrom(msg)
+		nbytes, addr, err := c.ReadFrom(msg)
+ 
 		if h.stop {
 			break
 		}
 		if err != nil {
 			continue
 		}
-		h.phandler.Handle(msg[:nbytes], nbytes)
+        src := addr.((*net.UDPAddr)).IP
+//       	log.Printf("UDP received %v\n",addr.((*net.UDPAddr)).IP)
+
+		h.phandler.Handle(msg[:nbytes], nbytes, src)
 	}
 }

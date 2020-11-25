@@ -77,13 +77,13 @@ func (s *pcapService) GetStat() *stat.ServiceStat {
 
 func (s *pcapService) handle(packet gopacket.Packet) error {
 
-	ip := (net.IP)(packet.NetworkLayer().NetworkFlow().Src().Raw())
+	src := (net.IP)(packet.NetworkLayer().NetworkFlow().Src().Raw())
 	payload := packet.TransportLayer().LayerPayload()
 
 	if len(payload) > 0 {
 		var headers []kafka.Header
 		if len(s.conf.PcapService.SrcIpHeaderName) > 0 {
-			hdr := kafka.Header{s.conf.PcapService.SrcIpHeaderName, []byte(ip.String())}
+			hdr := kafka.Header{s.conf.PcapService.SrcIpHeaderName, []byte(src.String())}
 			headers = append(headers, hdr)
 		}
 		if s.conf.PcapService.Base64Body {

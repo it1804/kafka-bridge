@@ -39,6 +39,7 @@ type (
 		SignatureBytes map[string]string `json:"signature_bytes,omitempty"`
 		Workers        uint              `json:"workers,omitempty"`
 		MaxPacketSize  uint32            `json:"max_packet_size,omitempty"`
+		SrcIpHeaderName string `json:"source_ip_header,omitempty"`
 	}
 
 	ServiceConf struct {

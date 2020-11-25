@@ -12,6 +12,7 @@ import (
 	"log"
 	"strconv"
 	"sync"
+    "net"
 )
 
 type (
@@ -73,7 +74,7 @@ func (s *udpService) GetStat() *stat.ServiceStat {
 	return s.output.GetStat()
 }
 
-func (s *udpService) handle(payload []byte, length int) error {
+func (s *udpService) handle(payload []byte, length int, src net.IP) error {
 	if length > 0 {
 		for key, value := range s.conf.UdpService.SignatureBytes {
 			offset, err := strconv.ParseUint(key, 10, 32)
@@ -95,10 +96,16 @@ func (s *udpService) handle(payload []byte, length int) error {
 				return nil
 			}
 		}
+		var headers []kafka.Header
+		if len(s.conf.UdpService.SrcIpHeaderName) > 0 {
+			hdr := kafka.Header{s.conf.UdpService.SrcIpHeaderName, []byte(src.String())}
+			headers = append(headers, hdr)
+		}
+
 		if s.conf.UdpService.Base64Body {
-			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: []byte(base64.StdEncoding.EncodeToString([]byte(payload)))}
+			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: []byte(base64.StdEncoding.EncodeToString([]byte(payload))), Headers: headers}
 		} else {
-			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: payload}
+			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: payload, Headers: headers}
 		}
 	} else {
 		log.Printf("[%s] UDP received empty packet\n", s.conf.Name)
