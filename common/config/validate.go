@@ -44,6 +44,20 @@ func ValidateUdpServerConfig(conf *UdpServiceConf, serviceName string) {
 	}
 }
 
+func ValidatePcapServerConfig(conf *PcapServiceConf, serviceName string) {
+	if len(conf.Device) == 0 {
+		log.Fatalf("[%s] You must specify device name", serviceName)
+	}
+	if conf.SnapLen == 0 {
+		log.Printf("[%s] Pcap snap len value not defined, set to default (65535)", serviceName)
+		conf.SnapLen = 65535
+	}
+	if len(conf.Expression) == 0 {
+		log.Fatalf("[%s] You must specify pcap filter", serviceName)
+	}
+
+}
+
 func ValidateHttpServerConfig(conf *HttpServiceConf, serviceName string) {
 	if len(conf.Listen) == 0 {
 		log.Fatalf("[%s] You must specify listen address", serviceName)

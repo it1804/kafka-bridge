@@ -8,6 +8,7 @@ import (
 	"github.com/it1804/kafka-bridge/services"
 	"github.com/it1804/kafka-bridge/services/http"
 	"github.com/it1804/kafka-bridge/services/kafka"
+	"github.com/it1804/kafka-bridge/services/pcap"
 	"github.com/it1804/kafka-bridge/services/stat"
 	"github.com/it1804/kafka-bridge/services/udp"
 	"github.com/mitchellh/mapstructure"
@@ -56,6 +57,8 @@ func main() {
 	for i := range conf.Services {
 		if conf.Services[i].Type == "http" {
 			statService.Watch(http.NewHttpService(ctxWithCancel, wg, &conf.Services[i]))
+		} else if conf.Services[i].Type == "pcap" {
+			statService.Watch(pcap.NewPcapService(ctxWithCancel, wg, &conf.Services[i]))
 		} else if conf.Services[i].Type == "udp" {
 			statService.Watch(udp.NewUdpService(ctxWithCancel, wg, &conf.Services[i]))
 		} else if conf.Services[i].Type == "kafka_consumer" {

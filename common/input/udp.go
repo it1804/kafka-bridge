@@ -12,7 +12,7 @@ type (
 	UdpServerConf struct {
 		Listen        string
 		Workers       uint
-		MaxPacketSize uint
+		MaxPacketSize uint32
 	}
 
 	udpConnHandler struct {
@@ -68,7 +68,7 @@ func (r *UdpServer) Run(ctx context.Context, phandler handlers.UdpPacketHandler)
 	return nil
 }
 
-func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, packetSize uint, worker_id uint) {
+func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, packetSize uint32, worker_id uint) {
 	defer wg.Done()
 	defer c.Close()
 	for h.stop == false {
