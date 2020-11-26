@@ -1,7 +1,7 @@
 package handlers
 
 import (
-    "net"
+	"net"
 )
 
 type (

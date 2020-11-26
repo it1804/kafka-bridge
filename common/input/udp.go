@@ -18,12 +18,14 @@ type (
 	udpConnHandler struct {
 		phandler handlers.UdpPacketHandler
 		stop     bool
+		server   *UdpServer
 	}
 
 	UdpServer struct {
 		wg          *sync.WaitGroup
 		serviceName string
 		conf        *UdpServerConf
+		bufferPool  sync.Pool
 	}
 )
 
@@ -32,6 +34,7 @@ func NewUdpServer(serviceName string, conf *UdpServerConf) *UdpServer {
 		conf:        conf,
 		wg:          &sync.WaitGroup{},
 		serviceName: serviceName,
+		bufferPool:  sync.Pool{New: func() interface{} { return make([]byte, conf.MaxPacketSize) }},
 	}
 }
 
@@ -46,6 +49,7 @@ func (r *UdpServer) Run(ctx context.Context, phandler handlers.UdpPacketHandler)
 	handler := &udpConnHandler{
 		phandler: phandler,
 		stop:     false,
+		server:   r,
 	}
 
 	lc := net.ListenConfig{}
@@ -72,18 +76,17 @@ func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, pac
 	defer wg.Done()
 	defer c.Close()
 	for h.stop == false {
-		msg := make([]byte, packetSize)
+		msg := h.server.bufferPool.Get().([]byte)
 		nbytes, addr, err := c.ReadFrom(msg)
- 
+
 		if h.stop {
 			break
 		}
 		if err != nil {
 			continue
 		}
-        src := addr.((*net.UDPAddr)).IP
-//       	log.Printf("UDP received %v\n",addr.((*net.UDPAddr)).IP)
-
+		src := addr.((*net.UDPAddr)).IP
 		h.phandler.Handle(msg[:nbytes], nbytes, src)
+		h.server.bufferPool.Put(msg)
 	}
 }

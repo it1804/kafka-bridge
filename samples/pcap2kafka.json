@@ -1,0 +1,23 @@
+{
+    "services": [
+    {
+        "type": "pcap",
+        "name": "pcap-stream",
+        "pcap_options": {
+            "device": "eth1",
+            "filter": "udp src port 1111",
+            "snap_len": 65535,
+            "source_ip_header":"src-ip",
+            "base64_encode_body":false,
+        },
+        "kafka_producer": {
+            "brokers": "10.0.0.1:9092, 10.0.0.2:9092, 10.0.0.3:9092",
+            "topic": "pcap-stream",
+            "options": ["compression.codec=snappy", "socket.keepalive.enable=true", "enable.idempotence=true", "queued.max.messages.kbytes=1048576", "linger.ms=5", "retries=100000"],
+            "queue_buffer_len": 10000
+        }
+    }],
+    "stat": {
+        "listen": "0.0.0.0:8091"
+    }
+}

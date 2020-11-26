@@ -10,9 +10,9 @@ import (
 	"github.com/it1804/kafka-bridge/common/stat"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"log"
+	"net"
 	"strconv"
 	"sync"
-    "net"
 )
 
 type (
@@ -101,7 +101,6 @@ func (s *udpService) handle(payload []byte, length int, src net.IP) error {
 			hdr := kafka.Header{s.conf.UdpService.SrcIpHeaderName, []byte(src.String())}
 			headers = append(headers, hdr)
 		}
-
 		if s.conf.UdpService.Base64Body {
 			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: []byte(base64.StdEncoding.EncodeToString([]byte(payload))), Headers: headers}
 		} else {
