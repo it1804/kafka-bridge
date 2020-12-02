@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/it1804/kafka-bridge/common/stat"
+	"github.com/it1804/kafka-bridge/stat"
 )
 
 type (

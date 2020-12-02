@@ -2,7 +2,7 @@ package input
 
 import (
 	"context"
-	"github.com/it1804/kafka-bridge/common/handlers"
+	"github.com/it1804/kafka-bridge/input/handlers"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"log"
 	"sync"

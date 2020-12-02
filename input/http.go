@@ -1,8 +1,8 @@
-package stat
+package input
 
 import (
 	"context"
-	"github.com/it1804/kafka-bridge/common/handlers"
+	"github.com/it1804/kafka-bridge/input/handlers"
 	"log"
 	"net/http"
 	"sync"

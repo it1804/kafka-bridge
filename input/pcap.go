@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
-	"github.com/it1804/kafka-bridge/common/handlers"
+	"github.com/it1804/kafka-bridge/input/handlers"
 	"log"
 	"sync"
 )

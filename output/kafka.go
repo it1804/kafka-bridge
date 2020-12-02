@@ -3,7 +3,7 @@ package output
 import (
 	"context"
 	"encoding/json"
-	"github.com/it1804/kafka-bridge/common/stat"
+	"github.com/it1804/kafka-bridge/stat"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"log"
 	"sync"

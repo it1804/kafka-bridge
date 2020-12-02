@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"github.com/it1804/kafka-bridge/common/config"
+	"github.com/it1804/kafka-bridge/config"
 	"github.com/it1804/kafka-bridge/services"
 	"github.com/it1804/kafka-bridge/services/http"
 	"github.com/it1804/kafka-bridge/services/kafka"
