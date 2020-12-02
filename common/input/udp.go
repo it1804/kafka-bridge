@@ -25,7 +25,6 @@ type (
 		wg          *sync.WaitGroup
 		serviceName string
 		conf        *UdpServerConf
-		bufferPool  sync.Pool
 	}
 )
 
@@ -34,7 +33,6 @@ func NewUdpServer(serviceName string, conf *UdpServerConf) *UdpServer {
 		conf:        conf,
 		wg:          &sync.WaitGroup{},
 		serviceName: serviceName,
-		bufferPool:  sync.Pool{New: func() interface{} { return make([]byte, conf.MaxPacketSize) }},
 	}
 }
 
@@ -76,7 +74,7 @@ func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, pac
 	defer wg.Done()
 	defer c.Close()
 	for h.stop == false {
-		msg := h.server.bufferPool.Get().([]byte)
+		msg := make([]byte, packetSize)
 		nbytes, addr, err := c.ReadFrom(msg)
 
 		if h.stop {
@@ -87,6 +85,5 @@ func (h *udpConnHandler) receivePacket(c net.PacketConn, wg *sync.WaitGroup, pac
 		}
 		src := addr.((*net.UDPAddr)).IP
 		h.phandler.Handle(msg[:nbytes], nbytes, src)
-		h.server.bufferPool.Put(msg)
 	}
 }
