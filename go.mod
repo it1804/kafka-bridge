@@ -8,4 +8,5 @@ require (
 	github.com/mitchellh/mapstructure v1.4.0
 	github.com/prometheus/client_golang v1.8.0
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.5.2
+	gopkg.in/mcuadros/go-syslog.v2 v2.3.0 // indirect
 )

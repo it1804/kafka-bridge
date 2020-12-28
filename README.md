@@ -1,11 +1,11 @@
-UDP, HTTP and Kafka bridge to Kafka
+UDP, HTTP, PCAP and Kafka bridge to Kafka
 
 go get -u github.com/it1804/kafka-bridge
 
 # kafka-bridge
 
 ## Описание
-Служит для пересылки в выделенный сервер (кластер) кафки сообщений, принимаемых по протоколам http, udp и kafka.
+Служит для пересылки в выделенный сервер (кластер) Apache Kafka сообщений, принимаемых по протоколам http, udp, pcap и kafka.
 * Сервис http:
 Принимает HTTP POST сообщения, извлекает из них тело сообщения и заголовки HTTP
 * Сервис udp:

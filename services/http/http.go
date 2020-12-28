@@ -73,7 +73,7 @@ func (s *httpService) GetStat() *stat.ServiceStat {
 }
 
 func (s *httpService) handle(w http.ResponseWriter, r *http.Request) error {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		fmt.Fprintf(w, "405 method not allowed\n")
 		return nil
