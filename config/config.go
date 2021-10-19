@@ -28,8 +28,7 @@ type (
 	HttpServiceConf struct {
 		Listen         string   `json:"listen"`
 		Path           string   `json:"path"`
-		Base64Body     bool     `json:"base64_encode_body,omitempty"`
-		UseJSON        bool     `json:"use_json,omitempty"`
+		HttpMode       string   `json:"mode"`
 		AllowedHeaders []string `json:"allowed_headers,omitempty"`
 	}
 

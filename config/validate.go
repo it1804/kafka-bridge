@@ -66,6 +66,10 @@ func ValidateHttpServerConfig(conf *HttpServiceConf, serviceName string) {
 		log.Printf("[%s] http path value not defined, set to default (\"/\")", serviceName)
 		conf.Path = "/"
 	}
+	if conf.HttpMode != "body" && conf.HttpMode != "raw" && conf.HttpMode != "base64_body" && conf.HttpMode != "json" {
+		log.Fatalf("[%s] Invalid http mode", serviceName)
+	}
+
 }
 
 func ValidateStatServerConfig(conf *StatServiceConf, serviceName string) {

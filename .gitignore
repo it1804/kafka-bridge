@@ -1,3 +1,4 @@
 /bin
 /kafka-bridge
 /*.json
+*.bak
