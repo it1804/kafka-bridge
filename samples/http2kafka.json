@@ -5,9 +5,8 @@
          "name":"http-stream-json",
          "http_options":{
             "listen":"127.0.0.1:8081",
-            "base64_encode_body":false,
             "path":"/",
-            "use_json":true,
+            "mode":"json",
             "allowed_headers":[
                "x-auth-token",
                "x-real-ip",
@@ -32,7 +31,7 @@
          "name":"http-stream-base64",
          "http_options":{
             "listen":"127.0.0.1:8082",
-            "use_json":false,
+            "mode":"body",
             "path":"/",
             "base64_encode_body":true
          },
