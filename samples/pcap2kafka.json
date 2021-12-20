@@ -7,7 +7,8 @@
             "device": "eth1",
             "filter": "udp src port 1111",
             "snap_len": 65535,
-            "source_ip_header":"src-ip",
+            "source_ip_header_name":"src-ip",
+            "source_ip_as_partition_key": true
             "base64_encode_body":false,
         },
         "kafka_producer": {

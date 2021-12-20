@@ -86,10 +86,16 @@ func (s *pcapService) handle(packet gopacket.Packet) error {
 			hdr := kafka.Header{s.conf.PcapService.SrcIpHeaderName, []byte(src.String())}
 			headers = append(headers, hdr)
 		}
+
+		var key []byte
+		if s.conf.PcapService.SrcIpAsPartitionKey {
+			key = []byte(src.String())
+		}
+
 		if s.conf.PcapService.Base64Body {
-			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: []byte(base64.StdEncoding.EncodeToString([]byte(payload))), Headers: headers}
+			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: []byte(base64.StdEncoding.EncodeToString([]byte(payload))), Headers: headers, Key: key}
 		} else {
-			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: payload, Headers: headers}
+			s.output.ProduceChannel() <- &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: s.output.GetTopic(), Partition: kafka.PartitionAny}, Value: payload, Headers: headers, Key: key}
 		}
 
 	} else {

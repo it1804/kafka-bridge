@@ -18,11 +18,12 @@ type (
 	}
 
 	PcapServiceConf struct {
-		Device          string `json:"device"`
-		SnapLen         uint32 `json:"snap_len"`
-		Expression      string `json:"filter"`
-		Base64Body      bool   `json:"base64_encode_body,omitempty"`
-		SrcIpHeaderName string `json:"source_ip_header,omitempty"`
+		Device              string `json:"device"`
+		SnapLen             uint32 `json:"snap_len"`
+		Expression          string `json:"filter"`
+		Base64Body          bool   `json:"base64_encode_body,omitempty"`
+		SrcIpHeaderName     string `json:"source_ip_header_name,omitempty"`
+		SrcIpAsPartitionKey bool   `json:"source_ip_as_partition_key,omitempty"`
 	}
 
 	HttpServiceConf struct {
